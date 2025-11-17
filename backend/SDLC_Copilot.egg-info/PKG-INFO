@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: SDLC-Copilot
+Version: 0.0.1
+Author: Shubham Prajapati
+Author-email: shubhamprajapati7748@gmail.com
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: langgraph
+Requires-Dist: langchain-community
+Requires-Dist: langchain-core
+Requires-Dist: langchain_groq
+Requires-Dist: python_dotenv
+Requires-Dist: langchain-anthropic
+Requires-Dist: ipykernel
+Requires-Dist: langchain-google-genai
+Requires-Dist: langchain-openai
+Requires-Dist: redis
+Requires-Dist: pydantic-settings
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist

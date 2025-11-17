@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+langgraph
+langchain-community
+langchain-core
+langchain_groq
+python_dotenv
+langchain-anthropic
+ipykernel
+langchain-google-genai
+langchain-openai
+redis
+pydantic-settings
+
+-e .
