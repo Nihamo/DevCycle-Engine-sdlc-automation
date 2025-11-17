@@ -74,24 +74,31 @@ Create file: `backend/.env`
 # === LLM KEYS ===
 
 GROQ_API_KEY=your_key_here
+
 GOOGLE_API_KEY=your_key_here
+
 ANTHROPIC_API_KEY=your_key_here
 
 # === Env Modes ===
 
 PROJECT_ENVIRONMENT=production
+
 AGENTIC=true
 
 # === Redis ===
 
 REDIS_HOST=localhost
+
 REDIS_PORT=6379
+
 REDIS_PASSWORD=
 
 # === LangSmith (Optional) ===
 
 LANGSMITH_API_KEY=
+
 LANGSMITH_PROJECT=DevCycleEngine
+
 LANGSMITH_TRACING=true
 
 
