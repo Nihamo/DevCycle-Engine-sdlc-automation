@@ -1,66 +1,38 @@
-🚀 DevCycle Engine — Agentic SDLC Automation Platform
 
-DevCycle Engine is an Agentic AI–powered SDLC Orchestrator that automates the entire software development lifecycle — from requirements → user stories → design docs → frontend/backend code → test cases → QA → deployment steps.
+
+# 🚀 DevCycle Engine — Agentic SDLC Automation Platform
+
+DevCycle Engine is an **Agentic AI–powered SDLC Orchestrator** that automates the entire software development lifecycle — from requirements → user stories → design docs → frontend/backend code → test cases → QA → deployment steps.
 
 Built using:
+- FastAPI (Backend)
+- React + Vite + Tailwind (Frontend)
+- LangGraph Agentic Workflows
+- Redis for Checkpointing
+- LLMs: Groq, Gemini, Anthropic
 
-FastAPI
+---
 
-LangGraph
+## 📦 Features
 
-Agentic AI workflows
-
-Groq, Gemini, Anthropic LLMs
-
-React + Vite + Tailwind frontend
-
-Redis for state checkpointing
-
-📦 Features
-🤖 Agentic AI Workflows
-
+### 🤖 Agentic AI Automation
 AI Agents automatically:
+- Interpret requirements
+- Generate & revise user stories
+- Create functional & technical design documents
+- Generate frontend & backend code
+- Produce test cases
+- Perform QA testing
+- Generate deployment steps
 
-interpret requirements
+Includes **interrupt points** → human approval required at key nodes.
 
-generate user stories
+---
 
-create functional & technical design documents
+## 🗂️ Project Structure
 
-generate & revise frontend + backend code
 
-generate test cases
 
-perform QA review
-
-create deployment steps
-
-Agentic Mode supports autonomous multi-step execution with human approvals at defined nodes.
-
-🧭 SDLC State Graph
-
-Uses LangGraph to orchestrate the full lifecycle with:
-
-Checkpoints
-
-Interrupt points
-
-Parallel LLM routing
-
-Deterministic workflow execution
-
-🌐 Multi-Provider LLM Support
-
-Supports:
-
-Google Gemini
-
-Groq Qwen / Mixtral / Llama
-
-Anthropic Claude
-(You can enable/disable providers via .env.)
-
-🗂️ Project Structure
 sdlc-automation/
 │
 ├── backend/
@@ -70,55 +42,66 @@ sdlc-automation/
 │   └── .env.example
 │
 └── frontend/
-    ├── index.html
-    ├── vite.config.ts
-    ├── tsconfig.json
-    └── src/
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+└── src/
 
-🔧 Prerequisites
-Mac
 
-Python 3.11
 
-Node.js ≥ 18
+---
 
-Redis (brew install redis)
+## 🔧 Prerequisites
 
-Windows
+### Mac
+- Python 3.11
+- Node.js ≥ 18
+- Redis (`brew install redis`)
 
-Python 3.11
+### Windows
+- Python 3.11
+- Node.js ≥ 18
+- Redis (MSI installer or Docker)
 
-Node.js ≥ 18
+---
 
-Redis (install from Redis MSI or use Docker)
+## ⚙️ Environment Variables (.env)
 
-⚙️ Environment Variables (.env)
+Create file: `backend/.env`
 
-Create this file at:
 
-backend/.env
 
 # === LLM KEYS ===
-GROQ_API_KEY=your_key
-GOOGLE_API_KEY=your_key
-ANTHROPIC_API_KEY=your_key
+
+GROQ_API_KEY=your_key_here
+GOOGLE_API_KEY=your_key_here
+ANTHROPIC_API_KEY=your_key_here
 
 # === Env Modes ===
+
 PROJECT_ENVIRONMENT=production
 AGENTIC=true
 
 # === Redis ===
+
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# === LangSmith Tracing (Optional) ===
+# === LangSmith (Optional) ===
+
 LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=DevCycleEngine
 LANGSMITH_TRACING=true
 
-🚀 How to Run – Backend
-Mac / Linux
+
+
+---
+
+# 🚀 Running the Backend
+
+## Mac / Linux
+
 cd backend
 
 python3.11 -m venv venv
@@ -132,7 +115,10 @@ brew services start redis
 # Run backend
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
-Windows (PowerShell)
+
+## Windows (PowerShell)
+
+
 cd backend
 
 py -3.11 -m venv venv
@@ -140,84 +126,112 @@ py -3.11 -m venv venv
 
 pip install -r requirements.txt
 
-# Start Redis (Windows)
+# Start Redis
 redis-server
 
 # Run backend
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 
-Backend will run at:
-👉 http://127.0.0.1:8000
+Backend URL:
+👉 [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-API docs:
-👉 http://127.0.0.1:8000/docs
+API Docs:
+👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-🎨 How to Run – Frontend
-Mac / Windows
+---
+
+# 🎨 Running the Frontend
+
+
 cd frontend
 npm install
 npm run dev
 
 
-Frontend runs at:
-👉 http://127.0.0.1:5173
+Frontend URL:
+👉 [http://127.0.0.1:5173](http://127.0.0.1:5173)
 
-🤖 Agentic Mode
+---
 
-You can toggle autonomous multi-step workflows:
+# 🤖 Agentic Mode (Autonomous SDLC)
 
-Enable Agentic AI (default)
+Enable autonomous multi-step AI:
+
+
 AGENTIC=true
+PROJECT_ENVIRONMENT=production
 
-Safe / Manual / Development Mode
+
+Disable autonomous mode (manual + safe):
+
+
 AGENTIC=false
 PROJECT_ENVIRONMENT=development
 
 
-When disabled, the system avoids:
+---
 
-LLM-heavy pipelines
+# 🧪 Test the API Quickly
 
-Multi-step autonomous loops
+### Generate user stories
 
-High-cost iterative graph execution
 
-🧪 Test the API
-Generate user stories
 curl -X POST http://127.0.0.1:8000/stories/generate \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Payment App",
-    "description": "UPI + Bill Payments",
-    "requirements": ["UPI", "Bill Payments", "KYC", "Security"]
+    "title": "UPI App",
+    "description": "A payments app",
+    "requirements": ["UPI", "KYC", "Security"]
   }'
 
-Review user stories
+
+### Approve user stories
+
+
 curl -X POST http://127.0.0.1:8000/stories/review/{session_id} \
   -H "Content-Type: application/json" \
   -d '{"feedback":"approved"}'
 
-🛠️ Troubleshooting
-❗ Redis Connection Error
+
+---
+
+# 🛠️ Troubleshooting
+
+### Redis Error: Connection Refused
+
 Error 61 connecting to localhost:6379
 
 
 Fix:
 
-brew services start redis   # Mac
-redis-server                # Windows
 
-🎯 Roadmap
+brew services start redis       # Mac
+redis-server                    # Windows
 
- GitHub Actions CI pipeline with agentic build/test
 
- Multi-user session mode
+---
 
- Plugin system for new SDLC nodes
+# 🎯 Roadmap
 
- Add RAG knowledge-base for company SDLC policies
+* Multi-user SDLC graph sessions
+* Plugin-based SDLC node system
+* GitHub integration (agentic PR creation)
+* RAG for SDLC standards & compliance
 
-📝 License
+---
+
+# 📝 License
 
 MIT License.
+
+
+
+---
+
+If you want:
+✅ an ASCII logo  
+✅ badges  
+✅ diagrams  
+Just tell me — I’ll format everything in copy-paste blocks.
+
