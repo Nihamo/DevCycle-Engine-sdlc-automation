@@ -1,236 +1,223 @@
----
-title: SDLC-Copilot
-emoji: 🐳
-colorFrom: purple
-colorTo: gray
-sdk: docker
-app_port: 7860
----
+🚀 DevCycle Engine — Agentic SDLC Automation Platform
 
-# **SDLC Copilot 🚀**
+DevCycle Engine is an Agentic AI–powered SDLC Orchestrator that automates the entire software development lifecycle — from requirements → user stories → design docs → frontend/backend code → test cases → QA → deployment steps.
 
-**AI-Powered Assistant for Automating the Software Development Lifecycle (SDLC)**
+Built using:
 
-## **📌 Overview**
+FastAPI
 
-**SDLC Copilot** is an **Agentic AI** system designed to streamline and automate the **Software Development Lifecycle (SDLC)**. From requirement gathering to deployment and maintenance, SDLC Copilot leverages AI to optimize development workflows, reduce manual effort, and ensure software quality.
+LangGraph
 
-Whether you're a solo developer, a startup, or an enterprise, SDLC Copilot acts as your AI-driven assistant to accelerate development, enforce best practices, and enhance collaboration across teams.
+Agentic AI workflows
 
-## **✨ Features**
+Groq, Gemini, Anthropic LLMs
 
-### **🔹 Requirement Analysis & User Story Generation**
+React + Vite + Tailwind frontend
 
-- AI-driven **requirement analysis** from user inputs.
-- Automatic **user story generation** with structured acceptance criteria.
-- Iterative refinement through feedback loops.
+Redis for state checkpointing
 
-### **🔹 Design & Documentation**
+📦 Features
+🤖 Agentic AI Workflows
 
-- AI-assisted **design document creation** (Functional & Technical).
-- Auto-generated **architecture diagrams** and API documentation.
-- Smart **feedback analysis** from design reviews.
+AI Agents automatically:
 
-### **🔹 Intelligent Code Generation & Review**
+interpret requirements
 
-- AI-assisted **code generation** based on design specifications.
-- Integrated **code review bot** for best practices, security, and optimization.
-- Automated **code refactoring** and bug detection.
+generate user stories
 
-### **🔹 Security & Compliance Checks**
+create functional & technical design documents
 
-- AI-driven **security vulnerability detection** in the codebase.
-- Compliance checks for **OWASP, GDPR, HIPAA, ISO27001, and more**.
-- Automated **code fixes** based on security scans.
+generate & revise frontend + backend code
 
-### **🔹 Automated Testing & Quality Assurance**
+generate test cases
 
-- AI-generated **unit, integration, and regression test cases**.
-- Test case review and refinement with **automated feedback loops**.
-- Intelligent bug detection and **self-healing test scripts**.
+perform QA review
 
-### **🔹 Continuous Integration & Deployment (CI/CD)**
+create deployment steps
 
-- AI-powered **DevOps pipeline automation** for CI/CD workflows.
-- Smart deployment strategies with **rollback and monitoring features**.
-- **Cloud-native integration** with AWS, Azure, GCP, and Kubernetes.
+Agentic Mode supports autonomous multi-step execution with human approvals at defined nodes.
 
-### **🔹 Post-Deployment Monitoring & Maintenance**
+🧭 SDLC State Graph
 
-- AI-based **real-time application monitoring** for anomalies and crashes.
-- **Predictive maintenance** using historical data and AI analytics.
-- Automated **patching and updates** with zero downtime strategies.
+Uses LangGraph to orchestrate the full lifecycle with:
 
-## **🛠 Tech Stack**
+Checkpoints
 
-- **AI/ML**: OpenAI, LangChain, Hugging Face
-- **Backend**: Python, FastAPI
-- **Frontend**: React.js, Next.js
-- **CI/CD**: GitHub Actions,, Docker
-- **LLMs** : ChatGPT, Cluade, Deepseek
+Interrupt points
 
-## **🚀 Getting Started**
+Parallel LLM routing
 
-### **1️⃣ Prerequisites**
+Deterministic workflow execution
 
-- **Docker and Docker Compose**
-  - [Install Docker](https://docs.docker.com/get-docker/)
-  - [Install Docker Compose](https://docs.docker.com/compose/install/)
-- **Python 3.8+**
-  - [Install Python](https://www.python.org/downloads/)
-  - [Install pip](https://pip.pypa.io/en/stable/installation/)
-- **Node.js 16+ and npm**
-  - [Install Node.js and npm](https://nodejs.org/)
+🌐 Multi-Provider LLM Support
 
-### **2️⃣ Installation**
+Supports:
 
-1. **Clone the repository:**
-```bash
-git clone https://github.com/shubhamprajapati7748/sdlc-copilot.git
-cd sdlc-copilot
-```
+Google Gemini
 
-### **3️⃣ Local Development Setup**
+Groq Qwen / Mixtral / Llama
 
-#### **Backend Setup (FastAPI)**
+Anthropic Claude
+(You can enable/disable providers via .env.)
 
-1. **Create and activate virtual environment**
+🗂️ Project Structure
+sdlc-automation/
+│
+├── backend/
+│   ├── app.py
+│   ├── src/sdlccopilot/
+│   ├── requirements.txt
+│   └── .env.example
+│
+└── frontend/
+    ├── index.html
+    ├── vite.config.ts
+    ├── tsconfig.json
+    └── src/
 
-   **Using Anaconda:**
-   ```bash
-   # Create a new conda environment
-   conda create -p venv python==3.12 -y
-   conda activate venv/
-   ```
+🔧 Prerequisites
+Mac
 
-   **OR Using Python venv (Alternative):**
-   ```bash
-   # Create virtual environment
-   python -m venv venv
-   
-   # Activate virtual environment
-   # On macOS/Linux:
-   source venv/bin/activate
-   # On Windows:
-   .\venv\Scripts\activate
-   ```
+Python 3.11
 
-2. **Set up the backend:**
-   ```bash
-   # Navigate to backend directory
-   cd backend
-   
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
+Node.js ≥ 18
 
-3. **Configure environment variables:**
-   ```bash
-   # Copy the example environment file
-   cp .env.example .env
-   
-   # Edit .env file with your configuration
-   # Required all variables
-   ```
+Redis (brew install redis)
 
-4. **Start the backend server:**
-   ```bash
-   # Run the development server
-   uvicorn app:app --reload --port 8000
-   ```
-   
-   The backend API will be available at `http://127.0.0.1:8000`
-   - API documentation: `http://127.0.0.1:8000/docs`
+Windows
 
-#### **Frontend Setup (Vite + React)**
+Python 3.11
 
-1. **Set up the frontend:**
-   ```bash
-   # Navigate to frontend directory
-   cd frontend
-   
-   # Install dependencies
-   npm install
-   # or
-   yarn install
-   ```
+Node.js ≥ 18
 
-2. **Configure environment variables:**
-   ```bash
-   # Copy the example environment file
-   cp .env.example .env
-   
-   # Edit .env file with your configuration
-   # Required variables:
-   VITE_BACKEND_URL="http://127.0.0.1:8000"
-   ```
+Redis (install from Redis MSI or use Docker)
 
-3. **Start the development server:**
-   ```bash
-   # Run the development server
-   npm run dev
-   # or
-   yarn dev
-   ```
-   
-   The frontend will be available at `http://localhost:5173`
+⚙️ Environment Variables (.env)
 
-<!-- ### **4️⃣ Running with Docker (Alternative)**
+Create this file at:
 
-If you prefer using Docker:
+backend/.env
 
-```bash
-# Build and start the containers
-docker-compose up --build
+# === LLM KEYS ===
+GROQ_API_KEY=your_key
+GOOGLE_API_KEY=your_key
+ANTHROPIC_API_KEY=your_key
 
-# To run in detached mode
-docker-compose up -d
-```
+# === Env Modes ===
+PROJECT_ENVIRONMENT=production
+AGENTIC=true
 
-The application will be available at:
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000` -->
+# === Redis ===
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
 
-### **5️⃣ Troubleshooting**
+# === LangSmith Tracing (Optional) ===
+LANGSMITH_API_KEY=
+LANGSMITH_PROJECT=DevCycleEngine
+LANGSMITH_TRACING=true
 
-Common issues and solutions:
+🚀 How to Run – Backend
+Mac / Linux
+cd backend
 
-1. **Port conflicts:**
-   - If port 8000 is in use, modify the port in the backend command
-   - If port 5173 is in use, Vite will automatically suggest an alternative port
+python3.11 -m venv venv
+source venv/bin/activate
 
-2. **Environment variables:**
-   - Ensure all required environment variables are set in both `.env` files
-   - Restart the servers after modifying environment variables
+pip install -r requirements.txt
 
-3. **Dependencies issues:**
-   - Delete `node_modules` and reinstall if frontend dependencies fail
-   - Recreate virtual environment if backend dependencies fail
+# Start Redis (Mac)
+brew services start redis
 
-4. **API connection:**
-   - Verify the `VITE_BACKEND_URL` in frontend `.env` matches your backend URL
-   - Check if the backend server is running and accessible
+# Run backend
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
----
+Windows (PowerShell)
+cd backend
 
-## **🤝 Contribution**
+py -3.11 -m venv venv
+.\venv\Scripts\activate
 
-Contributions to the SDLC-Copilot are welcome! If you have suggestions, enhancements, or bug fixes, please follow the steps below:
+pip install -r requirements.txt
 
-1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/YourFeature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/YourFeature`).
-5. Open a pull request.
+# Start Redis (Windows)
+redis-server
 
-## 🔏 License
+# Run backend
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-## **📧 Contact & Support**
+Backend will run at:
+👉 http://127.0.0.1:8000
 
-- Shubham Prajapati - [shubhamprajapati7748@gmail.com](mailto:shubhamprajapati7748@gmail.com)
+API docs:
+👉 http://127.0.0.1:8000/docs
 
----
+🎨 How to Run – Frontend
+Mac / Windows
+cd frontend
+npm install
+npm run dev
 
-<!-- ### **💡 Transform your Software Development Lifecycle with SDLC Copilot – Your AI-driven Assistant! 🚀**   -->
+
+Frontend runs at:
+👉 http://127.0.0.1:5173
+
+🤖 Agentic Mode
+
+You can toggle autonomous multi-step workflows:
+
+Enable Agentic AI (default)
+AGENTIC=true
+
+Safe / Manual / Development Mode
+AGENTIC=false
+PROJECT_ENVIRONMENT=development
+
+
+When disabled, the system avoids:
+
+LLM-heavy pipelines
+
+Multi-step autonomous loops
+
+High-cost iterative graph execution
+
+🧪 Test the API
+Generate user stories
+curl -X POST http://127.0.0.1:8000/stories/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Payment App",
+    "description": "UPI + Bill Payments",
+    "requirements": ["UPI", "Bill Payments", "KYC", "Security"]
+  }'
+
+Review user stories
+curl -X POST http://127.0.0.1:8000/stories/review/{session_id} \
+  -H "Content-Type: application/json" \
+  -d '{"feedback":"approved"}'
+
+🛠️ Troubleshooting
+❗ Redis Connection Error
+Error 61 connecting to localhost:6379
+
+
+Fix:
+
+brew services start redis   # Mac
+redis-server                # Windows
+
+🎯 Roadmap
+
+ GitHub Actions CI pipeline with agentic build/test
+
+ Multi-user session mode
+
+ Plugin system for new SDLC nodes
+
+ Add RAG knowledge-base for company SDLC policies
+
+📝 License
+
+MIT License.
