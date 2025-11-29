@@ -28,7 +28,16 @@ class DocumentHelper:
     def revised_functional_document_from_llm(self, functional_document, user_feedback):
         try:
             logging.info("Revising functional document with LLM...")
-            user_query =  f"Revise the functional document : {functional_document} and by following the user feedback: {user_feedback}. and return the complete revised functional document. "
+            user_query = f"""EXISTING FUNCTIONAL DOCUMENT (PRESERVE ALL CONTENT NOT MENTIONED IN FEEDBACK):
+{functional_document}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing sections, paragraphs, and content that are NOT mentioned in the feedback
+- Only modify the specific parts requested in the user feedback
+- Return the complete document with all preserved content and incremental changes applied"""
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : revised_functional_document_system_prompt, "human_query" : user_query})
             logging.info("Functional document revised with LLM.")
@@ -76,7 +85,16 @@ class DocumentHelper:
     def revised_technical_document_from_llm(self, technical_document, user_feedback):
         try:
             logging.info("Revising technical document with LLM...")
-            user_query =  f"Revise the technical document: {technical_document} and by following the user feedback: {user_feedback}."
+            user_query = f"""EXISTING TECHNICAL DOCUMENT (PRESERVE ALL CONTENT NOT MENTIONED IN FEEDBACK):
+{technical_document}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing sections, paragraphs, diagrams, tables, and content that are NOT mentioned in the feedback
+- Only modify the specific parts requested in the user feedback
+- Return the complete document with all preserved content and incremental changes applied"""
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : revised_technical_document_system_prompt, "human_query" : user_query})
             logging.info("Technical document revised with LLM.")

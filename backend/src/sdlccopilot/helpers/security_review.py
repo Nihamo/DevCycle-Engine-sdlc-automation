@@ -28,7 +28,20 @@ class SecurityReviewHelper:
     def revised_backend_code_with_security_reviews_from_llm(self, code, reviews, user_feedback):
         try:
             logging.info("Revising backend code according to security reviews with LLM...")
-            user_query =  f"Analyze this backend code: {code} and fix these security issues {reviews} according to the user feedback: {user_feedback} and return the revised code" 
+            user_query = f"""EXISTING BACKEND CODE (PRESERVE ALL CODE NOT MENTIONED IN FEEDBACK):
+{code}
+
+SECURITY REVIEWS TO ADDRESS:
+{reviews}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing files, modules, functions, and code that are NOT mentioned in the feedback
+- Fix the security issues identified in the reviews
+- Only modify the specific parts requested in the user feedback
+- Return the complete codebase with all preserved code and security fixes applied"""
             chain = prompt_template | self.anthropic_llm
             response = chain.invoke({"system_prompt" : CODE_SYSTEM_PROMPT, "human_query" : user_query})
             logging.info("Backend code revised according to security reviews with LLM.")

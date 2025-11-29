@@ -25,7 +25,16 @@ class TestCaseHelper:
     def revised_test_cases_from_llm(self, test_cases, user_feedback):
         try:
             logging.info("Revising test cases with LLM...")
-            user_query =  f"Revise these test cases {test_cases} with this user feedback {user_feedback}" 
+            user_query = f"""EXISTING TEST CASES (PRESERVE ALL TEST CASES NOT MENTIONED IN FEEDBACK):
+{test_cases}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing test cases that are NOT mentioned in the feedback
+- Only modify, add, or remove test cases as specifically requested in the feedback
+- Return the complete updated test suite with all preserved and modified test cases"""
             chain = json_prompt_template | self.llm  | json_output_parser
             response = chain.invoke({"system_prompt" : revised_test_cases_system_prompt, "human_query" : user_query})
             logging.info("Test cases revised with LLM.")

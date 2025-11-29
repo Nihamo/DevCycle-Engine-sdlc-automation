@@ -40,7 +40,19 @@ class CodeHelper:
     def revised_frontend_code_from_llm(self, code, user_feedback):
         try:
             logging.info("Revising frontend code with LLM...")
-            user_query =  f"Analyze this React frontend code: {code} and revise it according to user feedback: {user_feedback} and {FRONTEND_PROMPT}."
+            user_query = f"""EXISTING FRONTEND CODE (PRESERVE ALL CODE NOT MENTIONED IN FEEDBACK):
+{code}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing files, components, functions, and code that are NOT mentioned in the feedback
+- Only modify the specific parts requested in the user feedback
+- Return the complete codebase with all preserved code and incremental changes applied
+- Maintain code structure, imports, and dependencies unless explicitly changed
+
+{FRONTEND_PROMPT}"""
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : CODE_SYSTEM_PROMPT, "human_query" : user_query})
             logging.info("Frontend code revised with LLM.")
@@ -82,7 +94,19 @@ class CodeHelper:
     def revised_backend_code_from_llm(self, code, user_feedback):
         try:
             logging.info("Revising backend code with LLM...")
-            user_query =  f"Analyze this backend code: {code} and revise it according to user feedback: {user_feedback} and {BACKEND_PROMPT}."
+            user_query = f"""EXISTING BACKEND CODE (PRESERVE ALL CODE NOT MENTIONED IN FEEDBACK):
+{code}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing files, modules, functions, and code that are NOT mentioned in the feedback
+- Only modify the specific parts requested in the user feedback
+- Return the complete codebase with all preserved code and incremental changes applied
+- Maintain code structure, imports, and dependencies unless explicitly changed
+
+{BACKEND_PROMPT}"""
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : CODE_SYSTEM_PROMPT, "human_query" : user_query})
             logging.info("Backend code revised with LLM.")

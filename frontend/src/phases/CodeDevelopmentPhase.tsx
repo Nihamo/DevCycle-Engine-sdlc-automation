@@ -7,9 +7,7 @@ import { useInitializeProject } from "../hooks/useInitializeProject";
 import { useLocation } from "react-router-dom";
 import { parseXml } from "../utils";
 import { FileItem, Step, StepType } from "../types";
-import { TabView } from "../components/TabView";
-import { useWebContainer } from "../hooks/useWebContainer";
-import { PreviewFrame } from "../components/PreviewFrame";
+import { Code2 } from "lucide-react";
 import Loading from "../components/Loading";
 import ToastError from "../components/ToastError";
 // import { Loader } from "lucide-react";
@@ -24,7 +22,6 @@ export function CodeDevelopmentPhase({ selectedPhase, files, setFiles }: Builder
   useInitializeProject();
 
   const location = useLocation();
-  const { webContainer, isReady: webContainerReady, error: webContainerError } = useWebContainer();
   const { task } = location.state as { task: string };
   const data = location.state?.data;
   const [loading, setLoading] = useState(true);
@@ -43,222 +40,6 @@ export function CodeDevelopmentPhase({ selectedPhase, files, setFiles }: Builder
   // console.log(llmMessages);
 
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
-  const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
-  const [filesMounted, setFilesMounted] = useState(false);
-
-  useEffect(() => {
-    if (!webContainer || files.length === 0) {
-      setFilesMounted(false);
-      return;
-    }
-
-    // Ensure package.json exists - create a default one if missing
-    const ensurePackageJson = (files: FileItem[]): FileItem[] => {
-      const hasPackageJson = files.some(f => 
-        f.name === "package.json" || 
-        f.path === "package.json" ||
-        (f.type === "file" && f.name?.endsWith("package.json"))
-      );
-      
-      // Check recursively
-      const checkRecursive = (fileList: FileItem[]): boolean => {
-        for (const file of fileList) {
-          if (file.name === "package.json" || file.path?.endsWith("/package.json") || file.path === "package.json") {
-            return true;
-          }
-          if (file.children && checkRecursive(file.children)) {
-            return true;
-          }
-        }
-        return false;
-      };
-      
-      if (!hasPackageJson && !checkRecursive(files)) {
-        console.warn("package.json not found in files, creating default package.json");
-        // Create a default package.json for React + Vite project
-        const defaultPackageJson = {
-          name: "vite-react-typescript-starter",
-          private: true,
-          version: "0.0.0",
-          type: "module",
-          scripts: {
-            dev: "vite",
-            build: "vite build",
-            lint: "eslint .",
-            preview: "vite preview"
-          },
-          dependencies: {
-            "react": "^18.3.1",
-            "react-dom": "^18.3.1",
-            "react-router-dom": "^6.22.3",
-            "lucide-react": "^0.344.0"
-          },
-          devDependencies: {
-            "@types/react": "^18.3.5",
-            "@types/react-dom": "^18.3.0",
-            "@vitejs/plugin-react": "^4.3.1",
-            "typescript": "^5.5.3",
-            "vite": "^5.4.2",
-            "tailwindcss": "^3.4.1",
-            "autoprefixer": "^10.4.18",
-            "postcss": "^8.4.35"
-          }
-        };
-        
-        return [
-          {
-            name: "package.json",
-            type: "file" as const,
-            path: "package.json",
-            content: JSON.stringify(defaultPackageJson, null, 2),
-          },
-          ...files
-        ];
-      }
-      
-      return files;
-    };
-
-    // Also ensure index.html exists for Vite
-    const ensureIndexHtml = (files: FileItem[]): FileItem[] => {
-      const hasIndexHtml = files.some(f => 
-        f.name === "index.html" || 
-        f.path === "index.html"
-      );
-      
-      if (!hasIndexHtml) {
-        console.warn("index.html not found in files, creating default index.html");
-        const defaultIndexHtml = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>`;
-        
-        return [
-          {
-            name: "index.html",
-            type: "file" as const,
-            path: "index.html",
-            content: defaultIndexHtml,
-          },
-          ...files
-        ];
-      }
-      
-      return files;
-    };
-
-    let filesWithDefaults = ensurePackageJson(files);
-    filesWithDefaults = ensureIndexHtml(filesWithDefaults);
-
-    const createMountStructure = (files: FileItem[]): Record<string, any> => {
-      const mountStructure: Record<string, any> = {};
-
-      const processFile = (file: FileItem, isRootFolder: boolean) => {
-        if (file.type === "folder") {
-          // For folders, create a directory entry
-          mountStructure[file.name] = {
-            directory: file.children
-              ? Object.fromEntries(
-                file.children.map((child) => [
-                  child.name,
-                  processFile(child, false),
-                ])
-              )
-              : {},
-          };
-        } else if (file.type === "file") {
-          if (isRootFolder) {
-            mountStructure[file.name] = {
-              file: {
-                contents: file.content || "",
-              },
-            };
-          } else {
-            // For files, create a file entry with contents
-            return {
-              file: {
-                contents: file.content || "",
-              },
-            };
-          }
-        }
-
-        return mountStructure[file.name];
-      };
-
-      // Process each top-level file/folder
-      files.forEach((file) => processFile(file, true));
-      return mountStructure;
-    };
-
-    const mountStructure = createMountStructure(filesWithDefaults);
-    console.log("Mount structure:", JSON.stringify(mountStructure, null, 2));
-    console.log("Files to mount:", files);
-    console.log("Files to mount (detailed):", files.map(f => ({
-      name: f.name,
-      type: f.type,
-      path: f.path,
-      hasContent: !!f.content,
-      contentLength: f.content?.length || 0,
-      childrenCount: f.children?.length || 0
-    })));
-    
-    // Check if package.json exists in files
-    const hasPackageJson = files.some(f => 
-      f.name === "package.json" || 
-      f.path === "package.json" ||
-      (f.type === "file" && f.name?.endsWith("package.json"))
-    );
-    console.log("Has package.json in files:", hasPackageJson);
-    
-    // Also check recursively in folders
-    const checkForPackageJson = (fileList: FileItem[]): boolean => {
-      for (const file of fileList) {
-        if (file.name === "package.json" || file.path?.endsWith("/package.json") || file.path === "package.json") {
-          return true;
-        }
-        if (file.children) {
-          if (checkForPackageJson(file.children)) return true;
-        }
-      }
-      return false;
-    };
-    console.log("Has package.json (recursive):", checkForPackageJson(files));
-    
-    // Mount the structure if WebContainer is available
-    webContainer.mount(mountStructure).then(async () => {
-      console.log("Files mounted successfully");
-      
-      // Verify package.json exists after mounting
-      try {
-        const packageJson = await webContainer.fs.readFile("package.json", "utf-8");
-        console.log("package.json found after mount:", packageJson.substring(0, 200));
-      } catch (err) {
-        console.error("package.json NOT found after mount:", err);
-        // List root directory to see what's actually there
-        try {
-          const rootFiles = await webContainer.fs.readdir(".", { withFileTypes: true });
-          console.log("Root directory contents:", rootFiles.map(f => f.name));
-        } catch (listErr) {
-          console.error("Error listing root directory:", listErr);
-        }
-      }
-      
-      setFilesMounted(true);
-    }).catch((error) => {
-      console.error("Error mounting files:", error);
-      setFilesMounted(false);
-    });
-  }, [files, webContainer]);
 
   useEffect(() => {
     let originalFiles = [...files];
@@ -491,19 +272,14 @@ export function CodeDevelopmentPhase({ selectedPhase, files, setFiles }: Builder
           <FileExplorer files={files} onFileSelect={setSelectedFile} />
         </div>
         <div className="col-span-2 bg-gray-900 rounded-lg shadow-lg h-[calc(100vh-8rem)]">
-          <TabView selectedPhase={selectedPhase} activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="p-4 border-b border-gray-700">
+            <div className="flex items-center gap-2">
+              <Code2 className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-300 font-medium">Code</span>
+            </div>
+          </div>
           <div className="h-[calc(100%-4rem)]">
-            {activeTab === "code" ? (
-              <FilePreview selectedFile={selectedFile} />
-            ) : (
-              <PreviewFrame 
-                webContainer={webContainer} 
-                filesMounted={filesMounted}
-                isFrontend={selectedPhase === "frontend-coding"}
-                webContainerReady={webContainerReady}
-                webContainerError={webContainerError}
-              />
-            )}
+            <FilePreview selectedFile={selectedFile} />
           </div>
         </div>
       </div>

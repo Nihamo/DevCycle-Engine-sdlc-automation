@@ -52,7 +52,7 @@ class ApplicationState:
         if self.http_client:
             await self.http_client.aclose()
         if self.redis:
-            await self.redis.close()
+            self.redis.close()
 
 app = FastAPI(
     title="SDLC Copilot API",

@@ -50,16 +50,14 @@ class TestCaseNodes:
         user_feedback = state.test_cases_messages[-2].content.lower().strip()
         revised_count = state.revised_count + 1
         logging.info(f"revised_count : {revised_count}")
-
-        if revised_count == 3:
+        if revised_count == 50:
+            logging.info("Test cases revision maxed out !!!")
             return {
                 "test_cases_messages": AIMessage(
                     content="Test cases have been revision maxed out. Please review the test cases and continue with the next step."
                 ),
                 "test_cases_status": "approved"
             }
-        test_cases = self.test_case_helper.revised_test_cases_from_llm(state.test_cases, user_feedback)
-        
         test_cases = None
         if os.environ.get("PROJECT_ENVIRONMENT") != "development":
             test_cases = self.test_case_helper.revised_test_cases_from_llm(state.test_cases, user_feedback)

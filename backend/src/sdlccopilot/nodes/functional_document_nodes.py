@@ -54,8 +54,8 @@ class FunctionalDocumentNodes:
         logging.info(f"user_feedback: {user_feedback}")
         revised_count = state.revised_count + 1
         logging.info(f"revised_count : {revised_count}")
-
-        if revised_count == 3:
+        if revised_count == 50:
+            logging.info("Functional documents revision maxed out !!!")
             return {
                 f"{doc_type}_messages": AIMessage(
                     content="Functional documents have been revision maxed out. Please review the these documents and continue with the next step."

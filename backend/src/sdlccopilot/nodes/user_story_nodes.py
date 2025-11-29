@@ -66,7 +66,7 @@ class UserStoryNodes:
         if state.user_story_status == 'feedback':
             revised_count = state.revised_count + 1
             logging.info(f"revised_count : {revised_count}")
-            if revised_count == 3:
+            if revised_count == 50:
                 logging.info("User stories revision maxed out !!!")
                 return {
                     "user_story_messages" :  AIMessage(

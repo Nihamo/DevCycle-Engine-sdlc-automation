@@ -58,15 +58,14 @@ class DevelopmentNodes:
         user_feedback = state.frontend_messages[-2].content.lower().strip()
         revised_count = state.revised_count + 1
         logging.info(f"revised_count : {revised_count}")
-
-        if revised_count == 3:
+        if revised_count == 50:
+            logging.info("Frontend code revision maxed out !!!")
             return {
                 f"{code_type}_messages": AIMessage(
                     content="Code have been revision maxed out. Please review the code and continue with the next step."
                 ),
                 f"{code_type}_status": "approved"
             }
-        
         revised_code = None
         if os.environ.get("PROJECT_ENVIRONMENT") != "development":
             revised_code = self.code_helper.revised_frontend_code_from_llm(state.frontend_code, user_feedback)
@@ -129,15 +128,14 @@ class DevelopmentNodes:
         user_feedback = state.backend_messages[-2].content.lower().strip()
         revised_count = state.revised_count + 1
         logging.info(f"revised_count : {revised_count}")
-
-        if revised_count == 3:
+        if revised_count == 50:
+            logging.info("Backend code revision maxed out !!!")
             return {
                 f"{code_type}_messages": AIMessage(
                     content="Code have been revision maxed out. Please review the code and continue with the next step."
                 ),
                 f"{code_type}_status": "approved"
             }
-        
         revised_code = None
         if os.environ.get("PROJECT_ENVIRONMENT") != "development":
             revised_code = self.code_helper.revised_backend_code_from_llm(state.backend_code, user_feedback)

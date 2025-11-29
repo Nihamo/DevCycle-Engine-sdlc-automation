@@ -1,4 +1,4 @@
-import { Code2, Eye } from "lucide-react";
+import { Code2 } from "lucide-react";
 
 interface TabViewProps {
   selectedPhase: string;
@@ -19,17 +19,6 @@ export function TabView({ selectedPhase, activeTab, onTabChange }: TabViewProps)
         <Code2 className="w-4 h-4" />
         Code
       </button>
-      {selectedPhase === "frontend-coding" &&
-      <button
-        onClick={() => onTabChange("preview")}
-        className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${activeTab === "preview"
-            ? "bg-gray-700 text-gray-100"
-            : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
-          }`}
-      >
-        <Eye className="w-4 h-4" />
-        Preview
-      </button>}
     </div>
   );
 }

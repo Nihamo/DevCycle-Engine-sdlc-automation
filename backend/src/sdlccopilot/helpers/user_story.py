@@ -25,7 +25,16 @@ class UserStoryHelper:
     def revised_user_stories_with_llm(self, user_stories, user_feedback):
         try:
             logging.info("Revising user stories with LLM...")
-            user_query =  f"user_feedback: {user_feedback} and user_stories: {user_stories}"
+            user_query = f"""EXISTING USER STORIES (PRESERVE THESE UNLESS MODIFIED IN FEEDBACK):
+{user_stories}
+
+USER FEEDBACK (APPLY ONLY THESE CHANGES):
+{user_feedback}
+
+INSTRUCTIONS:
+- Keep ALL existing user stories that are NOT mentioned in the feedback
+- Only modify, add, or remove stories as specifically requested in the feedback
+- Return the complete updated list with all preserved and modified stories"""
             chain = json_prompt_template | self.llm | json_output_parser
             response = chain.invoke({"system_prompt" : revised_user_stories_system_prompt, "human_query" : user_query})
             logging.info("User stories revised with LLM.")

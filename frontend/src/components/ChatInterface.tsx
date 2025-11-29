@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Send } from "lucide-react";
 import type { ChatMessage, ProjectRequirements, SDLCPhase } from "../types";
 import { json, useLocation, useNavigate } from "react-router-dom";
@@ -22,6 +22,28 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
   const requirements = location.state?.requirements as ProjectRequirements;
   const data = location.state?.data
   const [loading, setLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  
+  // Check if phase is already approved
+  useEffect(() => {
+    const phaseData = location.state?.[selectedPhase];
+    if (phaseData?.status === "completed" || phaseData?.status === "approved") {
+      setIsApproved(true);
+    } else {
+      setIsApproved(false);
+    }
+    
+    // Load conversation history from phase data
+    if (phaseData?.messages) {
+      const chatMessages: ChatMessage[] = phaseData.messages.map((msg: any, index: number) => ({
+        id: `msg-${index}`,
+        content: msg.content,
+        sender: msg.type === "human" ? "user" : "ai",
+        timestamp: new Date(),
+      }));
+      setMessages(chatMessages);
+    }
+  }, [selectedPhase, location.state]);
 
   const getNextPhase = (current: SDLCPhase): SDLCPhase => {
     const phaseOrder: SDLCPhase[] = [
@@ -58,6 +80,13 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
   }
 
   const handleApproveAndContinue = async () => {
+    if (isApproved) {
+      // Already approved, just move to next phase
+      const nextPhase = getNextPhase(selectedPhase);
+      setSelectedPhase(nextPhase);
+      return;
+    }
+    
     setLoading(true);
     const relativeUrl = phaseApiMapping[selectedPhase];
     const prevState = location.state || {};
@@ -76,6 +105,17 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
         const jsonResponse = await response.json();
         console.log(jsonResponse)
         ToastSuccess(`Approved ${getPhaseLabel(selectedPhase)}!!`)
+        setIsApproved(true);
+        
+        // Add approval message to chat
+        const approvalMessage: ChatMessage = {
+          id: Date.now().toString(),
+          content: "Approved",
+          sender: "user",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, approvalMessage]);
+        
         navigate("/sdlc", {
           state: {
             ...prevState,
@@ -119,15 +159,25 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    setLoading(true);
     e.preventDefault();
-    if (!input.trim()) {
-      setLoading(false);
+    if (!input.trim() || isApproved) {
       return;
-    };
+    }
 
+    setLoading(true);
     const relativeUrl = phaseApiMapping[selectedPhase];
     const prevState = location.state || {};
+
+    // Add user message to chat immediately
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content: input,
+      sender: "user",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    const feedbackText = input;
+    setInput("");
 
     if (relativeUrl && data?.session_id) {
       const fullUrl = `${BACKEND_URL}/${relativeUrl}/${data.session_id}`;
@@ -137,12 +187,28 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ feedback: input }),
+          body: JSON.stringify({ feedback: feedbackText }),
         });
-        console.log(input)
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const jsonResponse = await response.json();
         console.log(jsonResponse);
+        
+        // Add AI response to chat
+        if (jsonResponse.messages && jsonResponse.messages.length > 0) {
+          const lastMessage = jsonResponse.messages[jsonResponse.messages.length - 1];
+          const aiMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            content: lastMessage.content,
+            sender: "ai",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, aiMessage]);
+        }
+        
         navigate("/sdlc", {
           state: {
             ...prevState,
@@ -152,78 +218,69 @@ export default function ChatInterface({ selectedPhase, setSelectedPhase }: Props
       } catch (error) {
         console.log(`error while calling ${fullUrl}: `, error)
         ToastError(`error while calling ${fullUrl}: ${error}`);
+        // Remove the user message if there was an error
+        setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id));
       } finally {
         setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
-
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      content: input,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
-    setLoading(false);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: "I understand your question. Let me help you with that.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
   };
 
   return (
-    <div className="flex flex-col h-20 bg-gray-900 border-t border-gray-800">
-      {/* <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+    <div className="flex flex-col bg-gray-900 border-t border-gray-800" style={{ height: isApproved ? 'auto' : '300px', maxHeight: '300px' }}>
+      {/* Conversation History */}
+      {messages.length > 0 && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[150px]">
+          {messages.map((message) => (
             <div
-              className={`max-w-xs md:max-w-md p-3 rounded-lg ${
-                message.sender === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-200'
-              }`}
+              key={message.id}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {message.content}
+              <div
+                className={`max-w-xs md:max-w-md p-3 rounded-lg ${
+                  message.sender === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-800 text-gray-200'
+                }`}
+              >
+                {message.content}
+              </div>
             </div>
-          </div>
-        ))}
-      </div> */}
+          ))}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
         <div className={`flex space-x-2 ${selectedPhase === 'requirements' && 'items-center justify-center'}`}>
           <button
             onClick={handleApproveAndContinue}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md 
-              hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200
-                active:scale-[0.8]"
+            disabled={isApproved}
+            className={`px-6 py-3 rounded-md transition-colors duration-200 ${
+              isApproved 
+                ? 'bg-green-600 text-white cursor-not-allowed' 
+                : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 active:scale-[0.8]'
+            }`}
           >
-            Approve & Continue
+            {isApproved ? 'Approved ✓' : 'Approve & Continue'}
           </button>
-          {selectedPhase !== "requirements" &&
+          {selectedPhase !== "requirements" && !isApproved &&
             <>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Provide feedback..."
-                className="flex-1 bg-gray-800 border-gray-700 rounded-md px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Provide feedback or request changes..."
+                disabled={isApproved}
+                className={`flex-1 bg-gray-800 border-gray-700 rounded-md px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  isApproved ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                disabled={isApproved || loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-5 h-5" />
               </button>

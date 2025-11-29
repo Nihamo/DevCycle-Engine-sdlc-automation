@@ -50,8 +50,8 @@ class SecurityReviewNodes:
         user_feedback = state.security_reviews_messages[-2].content.lower().strip()
         revised_count = state.revised_count + 1
         logging.info(f"revised_count : {revised_count}")
-
-        if revised_count == 3:
+        if revised_count == 50:
+            logging.info("Security review revision maxed out !!!")
             return {
                 f"{code_type}_messages": AIMessage(
                     content="Code have been revision maxed out. Please review the code and continue with the next step."
