@@ -627,14 +627,20 @@ async def review_security_review(
         logging.debug(f"Updated state: {state}")
         status = "completed" if state["security_reviews_status"] == 'approved' else state["security_reviews_status"]
         security_reviews_messages = [serialize_message(msg) for msg in state["security_reviews_messages"]]
+        
+        # Initialize variables to avoid NameError
+        test_cases = None
+        test_cases_status = None
+        test_cases_messages = None
+        
         if status == "completed":
-            test_cases = state["test_cases"]
-            test_cases_status = state["test_cases_status"]
-            test_cases_messages = [serialize_message(msg) for msg in state["test_cases_messages"]]
+            test_cases = state.get("test_cases")
+            test_cases_status = state.get("test_cases_status")
+            test_cases_messages = [serialize_message(msg) for msg in state.get("test_cases_messages", [])]
             
         session_data = {
             **session_data,    
-            "security_reviews": state["security_reviews"],
+            "security_reviews": state.get("security_reviews", []),
             "security_reviews_messages": security_reviews_messages,
             "security_reviews_status": status,
             "test_cases": test_cases if status == "completed" else None,
@@ -645,10 +651,15 @@ async def review_security_review(
         redis.set(session_id, json.dumps(session_data))
         logging.info(f"Security review reviewed successfully for session: {session_id}")
 
+        # Ensure security_reviews is a list, not a tuple
+        security_reviews = state.get("security_reviews", [])
+        if isinstance(security_reviews, tuple):
+            security_reviews = list(security_reviews)
+        
         return SecurityReviewResponse.model_construct(
             session_id=session_id,
             status=status,
-            reviews=state["security_reviews"],
+            reviews=security_reviews,
             messages=security_reviews_messages
         )
 
@@ -704,21 +715,35 @@ async def review_test_cases(
             state = event
         
         logging.debug(f"Updated state: {state}")
-        status = "completed" if state["test_cases_status"] == 'approved' else state["test_cases_status"]
-        test_cases_messages = [serialize_message(msg) for msg in state["test_cases_messages"]]
+        status = "completed" if state.get("test_cases_status") == 'approved' else state.get("test_cases_status", "pending")
+        test_cases_messages = [serialize_message(msg) for msg in state.get("test_cases_messages", [])]
+        
+        # Initialize variables to avoid NameError
+        qa_testing = None
+        qa_testing_status = None
+        qa_testing_messages = None
+        deployment_steps = None
+        deployment_status = None
+        deployment_messages = None
+        
         if status == "completed":
-            qa_testing = state["qa_testing"]
-            qa_testing_status = state["qa_testing_status"]
-            qa_testing_messages = [serialize_message(msg) for msg in state["qa_testing_messages"]]
+            qa_testing = state.get("qa_testing")
+            qa_testing_status = state.get("qa_testing_status")
+            qa_testing_messages = [serialize_message(msg) for msg in state.get("qa_testing_messages", [])]
             
-            deployment_steps = state["deployment_steps"]
-            deployment_status = state["deployment_status"]
-            deployment_status = "completed" if state["deployment_status"] == 'approved' else state["deployment_status"]
-            deployment_messages = [serialize_message(msg) for msg in state["deployment_messages"]]
+            deployment_steps = state.get("deployment_steps")
+            deployment_status_raw = state.get("deployment_status")
+            deployment_status = "completed" if deployment_status_raw == 'approved' else deployment_status_raw
+            deployment_messages = [serialize_message(msg) for msg in state.get("deployment_messages", [])]
+            
+        # Ensure test_cases is a list, not a tuple
+        test_cases = state.get("test_cases", [])
+        if isinstance(test_cases, tuple):
+            test_cases = list(test_cases)
             
         session_data = {
-            **session_data,    
-            "test_cases": state["test_cases"],
+            **session_data,
+            "test_cases": test_cases,
             "test_cases_messages": test_cases_messages,
             "test_cases_status": status,
             "qa_testing": qa_testing if status == "completed" else None,
@@ -732,10 +757,15 @@ async def review_test_cases(
         redis.set(session_id, json.dumps(session_data))
         logging.info(f"Test cases reviewed successfully for session: {session_id}")
 
+        # Ensure test_cases is a list for the response
+        test_cases_response = state.get("test_cases", [])
+        if isinstance(test_cases_response, tuple):
+            test_cases_response = list(test_cases_response)
+        
         return TestCasesResponse.model_construct(
             session_id=session_id,
             status=status,
-            test_cases=state["test_cases"],
+            test_cases=test_cases_response,
             messages=test_cases_messages
         )
 
