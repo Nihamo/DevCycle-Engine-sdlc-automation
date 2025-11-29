@@ -20,18 +20,20 @@ export default function UserStoriesPhase() {
     // console.log(location.state?.["user-stories"].user_stories)
     setLoading(true)
     if (location.state?.["user-stories"]?.user_stories) {
-      console.log("inside")
+      // After review, use the latest user stories from state
       setUserStories(prevState => ({
         ...prevState,
-        user_stories: location.state?.["user-stories"].user_stories,
+        user_stories: location.state["user-stories"].user_stories,
       }))
       setLoading(false)
       return
     }
-    if (data.user_stories) {
+
+    if (data?.user_stories) {
+      // On initial load, replace (not append) to avoid duplicates in React StrictMode
       setUserStories(prevState => ({
         ...prevState,
-        user_stories: [...prevState.user_stories, ...data.user_stories],
+        user_stories: data.user_stories,
       }))
       setLoading(false)
     }

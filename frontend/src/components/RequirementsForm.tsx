@@ -8,9 +8,15 @@ interface Props {
 
 export default function RequirementsForm({ onSubmit }: Props) {
   const [requirements, setRequirements] = useState<ProjectRequirements>({
-    title: "PayMate: Your Ultimate Payment Companion",
-    description: "PayMate is a comprehensive payment application that allows users to perform seamless transactions using the Unified Payments Interface (UPI). Beyond basic payments, PayMate offers features such as quick loans, bill payments, and a user-friendly interface, making it a one-stop solution for all financial needs.",
-    objectives: ["Implement multi-factor authentication, including biometrics (fingerprint and facial recognition) and MPIN, to secure user accounts.​", "Enable users to link multiple bank accounts and perform instant fund transfers using UPI.", "Provide users with access to instant micro-loans with minimal documentation.", "Allow users to pay utility bills such as electricity, water, gas, and broadband directly through the app."],
+    title: "CampusConnect: College Event Registration Portal",
+    description:
+      "CampusConnect is a web-based portal for managing college events, festivals, workshops, hackathons, and club activities. Students can browse upcoming events, register individually or as teams, receive confirmations, and download digital entry passes. Event organizers can publish events, manage capacities, track registrations, and export attendance reports, creating a unified experience for the entire campus.",
+    objectives: [
+      "Allow event organizers to create and publish events with details such as title, description, schedule, venue, ticket type (free/paid), department, and registration limits.",
+      "Enable students to browse and search events by category (technical, cultural, sports, workshop), filter by date/department, and view eligibility criteria and registration deadlines.",
+      "Provide a secure registration and check-in flow where students can register, receive QR-based entry passes via email/SMS, and be marked present at the venue using QR scanning.",
+      "Offer an organizer dashboard to view real-time registration counts, close registrations when capacity is reached, download participant lists, send announcements/reminders, and generate post-event attendance and feedback reports.",
+    ],
   });
 
   const handleSubmit = (e: React.FormEvent) => {

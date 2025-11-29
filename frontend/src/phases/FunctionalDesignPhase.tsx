@@ -2,17 +2,29 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { BACKEND_URL } from "../../config";
 import { Download } from 'lucide-react';
-import { marked } from "marked"
 import Loading from "../components/Loading";
 import ToastError from "../components/ToastError";
+import jsPDF from "jspdf";
+import { marked } from "marked";
 
 export default function FunctionalDesignPhase() {
   const location = useLocation();
   const data = location.state?.data
   const [functionalDocument, setFunctionalDocument] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
+  const sanitizeDocument = (raw: string): string => {
+    if (!raw) return "";
+    // Remove hidden LLM "thinking" sections wrapped in <think> tags
+    let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "");
+    // Unwrap fenced HTML blocks like ```html ... ```
+    cleaned = cleaned.replace(/```html([\s\S]*?)```/gi, "$1");
+    cleaned = cleaned.replace(/```([\s\S]*?)```/gi, "$1");
+    return cleaned.trim();
+  };
 
   const getFunctionalDesignPhaseDoc = async () => {
     // console.log(location.state?.["functional-design"].document)
@@ -63,53 +75,189 @@ export default function FunctionalDesignPhase() {
   }, [location.state])
 
   const generateMarkdown = (): string => {
-    return functionalDocument
+    return sanitizeDocument(functionalDocument);
   }
 
-  // - Wraps markdown content in a minimal HTML template.
-  // - Sets the MIME type to "application/msword" so that Word opens the document.
-  // - Downloads the file as "FunctionalDesignPhase.doc".
-  const handleDownload = () => {
-    const markdownContent = generateMarkdown();
-    // Convert markdown to HTML using marked
-    const htmlConverted = marked(markdownContent); // NEW: Convert markdown to HTML
+  // Generate and download PDF using a clean, light-theme HTML version
+  const handleDownload = async () => {
+    const title = data?.project_requirements?.title || "FunctionalDesign";
+    const doc = new jsPDF("p", "pt", "a4");
+    const markdown = generateMarkdown();
 
-    // Wrap the converted HTML in a minimal HTML template with inline CSS for professional styling
-    const htmlContent = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office'
-            xmlns:w='urn:schemas-microsoft-com:office:word'
-            xmlns='http://www.w3.org/TR/REC-html40'>
-        <head>
-          <meta charset='utf-8'>
-          <title>Functional Design Phase Document</title>
-          <style>
-            /* Professional styling for Word document */
-            body { font-family: 'Arial', sans-serif; margin: 20px; color: #374151; }
-            h1 { font-size: 24px; color: #1e40af; font-weight: bold; margin: 20px 0 10px; }
-            h2 { font-size: 20px; color: #1e3a8a; font-weight: 600; margin: 18px 0 8px; }
-            h3 { font-size: 18px; color: #1e3a8a; margin: 16px 0 6px; }
-            p { font-size: 14px; line-height: 1.6; margin: 8px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            th, td { border: 1px solid #4b5563; padding: 6px 8px; font-size: 14px; }
-            th { background-color: #1f2937; color: #fff; }
-            pre { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 10px; }
-          </style>
-        </head>
-        <body>
-          ${htmlConverted}
-        </body>
-      </html>`;
-    const blob = new Blob([htmlContent], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 72; // 1 inch
+    const maxWidth = pageWidth - margin * 2;
 
-    const link = document.createElement("a");
-    link.href = url;
-    var title = data?.project_requirements?.title
-    link.download = `${title}_functional_doc`
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const ensureSpace = (cursorY: number, needed: number): number => {
+      if (cursorY + needed > pageHeight - margin) {
+        doc.addPage();
+        return margin;
+      }
+      return cursorY;
+    };
+
+    const cleanInline = (text: string): string =>
+      text
+        // strip HTML tags like <p>, <strong>, </p>, etc.
+        .replace(/<\/?[^>]+>/g, " ")
+        // remove markdown emphasis / code markers
+        .replace(/[*_`]/g, "")
+        // remove heading hashes
+        .replace(/#+\s*/g, "")
+        // collapse multiple spaces
+        .replace(/\s+/g, " ")
+        .trim();
+
+    // Use Times family everywhere
+    doc.setFont("times", "bold");
+
+    // Document title on first page
+    let cursorY = margin;
+    const docTitle = `${title} – Functional Specification Document (FSD)`;
+    doc.setFontSize(16);
+    const titleWrapped = doc.splitTextToSize(docTitle, maxWidth);
+    doc.text(titleWrapped, margin, cursorY);
+    cursorY += titleWrapped.length * 22;
+
+    // Parse markdown into tokens
+    const tokens = marked.lexer(markdown);
+
+    let startedMajorSection = false;
+
+    const renderHeading = (text: string, level: number) => {
+      const cleaned = cleanInline(text);
+      if (!cleaned) return;
+
+      // Page break rules:
+      // - Level 1 or 2 (major section) start on a new page (except the first one after title)
+      if (level <= 2) {
+        if (startedMajorSection) {
+          // New major section → new page
+          doc.addPage();
+          cursorY = margin;
+        } else {
+          // First major section on the first page, continue after title
+          startedMajorSection = true;
+          cursorY = ensureSpace(cursorY, 14);
+        }
+        cursorY += 14; // spacing before
+        doc.setFont("times", "bold");
+        doc.setFontSize(14); // subheading
+      } else {
+        // Sub‑sub‑heading: keep on same page, ensure space
+        cursorY += 14;
+        doc.setFont("times", "bold");
+        doc.setFontSize(12);
+      }
+
+      const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+      cursorY = ensureSpace(cursorY, wrapped.length * 18);
+      doc.text(wrapped, margin, cursorY);
+      cursorY += wrapped.length * 18 + 8; // spacing after
+    };
+
+    const renderParagraph = (text: string) => {
+      const cleaned = cleanInline(text);
+      if (!cleaned) return;
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+      wrapped.forEach((line) => {
+        cursorY = ensureSpace(cursorY, 16);
+        doc.text(line, margin, cursorY);
+        cursorY += 16;
+      });
+      cursorY += 4; // small gap
+    };
+
+    const renderList = (items: marked.Tokens.ListItem[], ordered: boolean) => {
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      items.forEach((item, index) => {
+        const bullet = ordered ? `${index + 1}. ` : "• ";
+        // Prefer raw text from the token instead of rendered HTML
+        const rawText = (item as any).text ? String((item as any).text) : marked.parser(item.tokens || []);
+        const cleaned = cleanInline(rawText);
+        if (!cleaned) return;
+        const wrapped = doc.splitTextToSize(`${bullet}${cleaned}`, maxWidth);
+        wrapped.forEach((line) => {
+          cursorY = ensureSpace(cursorY, 16);
+          doc.text(line, margin, cursorY);
+          cursorY += 16;
+        });
+      });
+      cursorY += 4;
+    };
+
+    const renderTable = (table: marked.Tokens.Table) => {
+      // Convert table content into bullet points instead of grid
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+
+      const headers = table.header.map((cell) => cleanInline(cell.text));
+
+      table.rows.forEach((row, rowIndex) => {
+        const cells = row.map((cell) => cleanInline(cell.text));
+
+        // Build a descriptive bullet from header → value pairs
+        const parts: string[] = [];
+        cells.forEach((value, idx) => {
+          const label = headers[idx] || `Col${idx + 1}`;
+          if (value) {
+            parts.push(`${label}: ${value}`);
+          }
+        });
+
+        if (parts.length === 0) {
+          return;
+        }
+
+        const bulletPrefix = "• ";
+        const bulletText = `${bulletPrefix}${parts.join("; ")}`;
+        const wrapped = doc.splitTextToSize(bulletText, maxWidth);
+
+        wrapped.forEach((line) => {
+          cursorY = ensureSpace(cursorY, 16);
+          doc.text(line, margin, cursorY);
+          cursorY += 16;
+        });
+
+        // Extra spacing between table rows rendered as bullets
+        cursorY += 4;
+      });
+
+      cursorY += 8;
+    };
+
+    for (const token of tokens) {
+      switch (token.type) {
+        case "heading":
+          renderHeading((token as marked.Tokens.Heading).text, (token as marked.Tokens.Heading).depth);
+          break;
+        case "paragraph":
+          renderParagraph((token as marked.Tokens.Paragraph).text);
+          break;
+        case "list":
+          renderList((token as marked.Tokens.List).items, (token as marked.Tokens.List).ordered ?? false);
+          break;
+        case "table":
+          renderTable(token as marked.Tokens.Table);
+          break;
+        case "space":
+          cursorY += 8;
+          break;
+        default:
+          // Fallback: if token has text, render as paragraph
+          // @ts-ignore
+          if (token.text) {
+            // @ts-ignore
+            renderParagraph(token.text as string);
+          }
+      }
+    }
+
+    doc.save(`${title}_functional_doc.pdf`);
   };
 
 
@@ -147,7 +295,9 @@ export default function FunctionalDesignPhase() {
             prose-strong:text-white
           "
           >
-            <ReactMarkdown>{generateMarkdown()}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {generateMarkdown()}
+            </ReactMarkdown>
           </div>
         </div>
       </div>

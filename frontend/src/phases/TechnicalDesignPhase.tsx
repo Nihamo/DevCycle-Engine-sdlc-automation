@@ -1,18 +1,29 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { BACKEND_URL } from "../../config";
-import { marked } from "marked"
 import { Download } from "lucide-react";
-import ReactMarkdown from "react-markdown"
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Loading from "../components/Loading";
 import ToastError from "../components/ToastError";
-
+import jsPDF from "jspdf";
+import { marked } from "marked";
 
 export default function TechnicalDesignPhase() {
     const location = useLocation();
     const data = location.state?.data
     const [technicalDocument, setTechnicalDocument] = useState<string>("");
     const [loading, setLoading] = useState(true);
+
+    const sanitizeDocument = (raw: string): string => {
+        if (!raw) return "";
+        // Remove hidden LLM "thinking" sections wrapped in <think> tags
+        let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "");
+        // Unwrap fenced HTML blocks like ```html ... ```
+        cleaned = cleaned.replace(/```html([\s\S]*?)```/gi, "$1");
+        cleaned = cleaned.replace(/```([\s\S]*?)```/gi, "$1");
+        return cleaned.trim();
+    };
 
     const getTechnicalDesignPhaseDoc = async () => {
         setLoading(true);
@@ -64,51 +75,175 @@ export default function TechnicalDesignPhase() {
 
 
     const generateMarkdown = (): string => {
-        return technicalDocument
+        return sanitizeDocument(technicalDocument);
     }
 
 
-    const handleDownload = () => {
-        const markdownContent = generateMarkdown();
-        // Convert markdown to HTML using marked
-        const htmlConverted = marked(markdownContent); // NEW: Convert markdown to HTML
+    const handleDownload = async () => {
+        const title = data?.project_requirements?.title || "TechnicalDesign";
+        const doc = new jsPDF("p", "pt", "a4");
 
-        // Wrap the converted HTML in a minimal HTML template with inline CSS for professional styling
-        const htmlContent = `
-          <html xmlns:o='urn:schemas-microsoft-com:office:office'
-                xmlns:w='urn:schemas-microsoft-com:office:word'
-                xmlns='http://www.w3.org/TR/REC-html40'>
-            <head>
-              <meta charset='utf-8'>
-              <title>Technical Design Phase Document</title>
-              <style>
-                /* Professional styling for Word document */
-                body { font-family: 'Arial', sans-serif; margin: 20px; color: #374151; }
-                h1 { font-size: 24px; color: #1e40af; font-weight: bold; margin: 20px 0 10px; }
-                h2 { font-size: 20px; color: #1e3a8a; font-weight: 600; margin: 18px 0 8px; }
-                h3 { font-size: 18px; color: #1e3a8a; margin: 16px 0 6px; }
-                p { font-size: 14px; line-height: 1.6; margin: 8px 0; }
-                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                th, td { border: 1px solid #4b5563; padding: 6px 8px; font-size: 14px; }
-                th { background-color: #1f2937; color: #fff; }
-                pre { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 10px; }
-              </style>
-            </head>
-            <body>
-              ${htmlConverted}
-            </body>
-          </html>`;
-        const blob = new Blob([htmlContent], { type: "application/msword" });
-        const url = URL.createObjectURL(blob);
+        const markdown = generateMarkdown();
 
-        const link = document.createElement("a");
-        link.href = url;
-        var title = data?.project_requirements?.title;
-        link.download = `${title}_technical_doc`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 72; // 1 inch
+        const maxWidth = pageWidth - margin * 2;
+
+        const ensureSpace = (cursorY: number, needed: number): number => {
+            if (cursorY + needed > pageHeight - margin) {
+                doc.addPage();
+                return margin;
+            }
+            return cursorY;
+        };
+
+        const cleanInline = (text: string): string =>
+            text
+                .replace(/<\/?[^>]+>/g, " ")
+                .replace(/[*_`]/g, "")
+                .replace(/#+\s*/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
+
+        // Use Times everywhere
+        doc.setFont("times", "bold");
+
+        // Title on first page
+        let cursorY = margin;
+        const docTitle = `${title} – Technical Design Document (TDD)`;
+        doc.setFontSize(16);
+        const titleWrapped = doc.splitTextToSize(docTitle, maxWidth);
+        doc.text(titleWrapped, margin, cursorY);
+        cursorY += titleWrapped.length * 22;
+
+        const tokens = marked.lexer(markdown);
+        let startedMajorSection = false;
+
+        const renderHeading = (text: string, level: number) => {
+            const cleaned = cleanInline(text);
+            if (!cleaned) return;
+
+            if (level <= 2) {
+                if (startedMajorSection) {
+                    doc.addPage();
+                    cursorY = margin;
+                } else {
+                    startedMajorSection = true;
+                    cursorY = ensureSpace(cursorY, 14);
+                }
+                cursorY += 14;
+                doc.setFont("times", "bold");
+                doc.setFontSize(14);
+            } else {
+                cursorY += 14;
+                doc.setFont("times", "bold");
+                doc.setFontSize(12);
+            }
+
+            const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+            cursorY = ensureSpace(cursorY, wrapped.length * 18);
+            doc.text(wrapped, margin, cursorY);
+            cursorY += wrapped.length * 18 + 8;
+        };
+
+        const renderParagraph = (text: string) => {
+            const cleaned = cleanInline(text);
+            if (!cleaned) return;
+            doc.setFont("times", "normal");
+            doc.setFontSize(12);
+            const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+            wrapped.forEach((line) => {
+                cursorY = ensureSpace(cursorY, 16);
+                doc.text(line, margin, cursorY);
+                cursorY += 16;
+            });
+            cursorY += 4;
+        };
+
+        const renderList = (items: marked.Tokens.ListItem[], ordered: boolean) => {
+            doc.setFont("times", "normal");
+            doc.setFontSize(12);
+            items.forEach((item, index) => {
+                const bullet = ordered ? `${index + 1}. ` : "• ";
+                const rawText = (item as any).text
+                    ? String((item as any).text)
+                    : marked.parser(item.tokens || []);
+                const cleaned = cleanInline(rawText);
+                if (!cleaned) return;
+                const wrapped = doc.splitTextToSize(`${bullet}${cleaned}`, maxWidth);
+                wrapped.forEach((line) => {
+                    cursorY = ensureSpace(cursorY, 16);
+                    doc.text(line, margin, cursorY);
+                    cursorY += 16;
+                });
+            });
+            cursorY += 4;
+        };
+
+        const renderTable = (table: marked.Tokens.Table) => {
+            doc.setFont("times", "normal");
+            doc.setFontSize(12);
+
+            const headers = table.header.map((cell) => cleanInline(cell.text));
+
+            table.rows.forEach((row) => {
+                const cells = row.map((cell) => cleanInline(cell.text));
+                const parts: string[] = [];
+                cells.forEach((value, idx) => {
+                    const label = headers[idx] || `Col${idx + 1}`;
+                    if (value) {
+                        parts.push(`${label}: ${value}`);
+                    }
+                });
+                if (parts.length === 0) return;
+
+                const bulletText = `• ${parts.join("; ")}`;
+                const wrapped = doc.splitTextToSize(bulletText, maxWidth);
+                wrapped.forEach((line) => {
+                    cursorY = ensureSpace(cursorY, 16);
+                    doc.text(line, margin, cursorY);
+                    cursorY += 16;
+                });
+                cursorY += 4;
+            });
+
+            cursorY += 8;
+        };
+
+        for (const token of tokens) {
+            switch (token.type) {
+                case "heading":
+                    renderHeading(
+                        (token as marked.Tokens.Heading).text,
+                        (token as marked.Tokens.Heading).depth
+                    );
+                    break;
+                case "paragraph":
+                    renderParagraph((token as marked.Tokens.Paragraph).text);
+                    break;
+                case "list":
+                    renderList(
+                        (token as marked.Tokens.List).items,
+                        (token as marked.Tokens.List).ordered ?? false
+                    );
+                    break;
+                case "table":
+                    renderTable(token as marked.Tokens.Table);
+                    break;
+                case "space":
+                    cursorY += 8;
+                    break;
+                default:
+                    // @ts-ignore
+                    if (token.text) {
+                        // @ts-ignore
+                        renderParagraph(token.text as string);
+                    }
+            }
+        }
+
+        doc.save(`${title}_technical_doc.pdf`);
     };
 
 
@@ -147,7 +282,9 @@ export default function TechnicalDesignPhase() {
                 prose-strong:text-white
               "
                     >
-                        <ReactMarkdown>{generateMarkdown()}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {generateMarkdown()}
+                        </ReactMarkdown>
                     </div>
                 </div>
             </div>
