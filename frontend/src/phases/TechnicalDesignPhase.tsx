@@ -124,7 +124,8 @@ export default function TechnicalDesignPhase() {
             const cleaned = cleanInline(text);
             if (!cleaned) return;
 
-            if (level <= 2) {
+            if (level === 1) {
+                // Level 1 (main sections): new page, center aligned, 14pt
                 if (startedMajorSection) {
                     doc.addPage();
                     cursorY = margin;
@@ -135,24 +136,39 @@ export default function TechnicalDesignPhase() {
                 cursorY += 14;
                 doc.setFont("times", "bold");
                 doc.setFontSize(14);
+                
+                const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+                cursorY = ensureSpace(cursorY, wrapped.length * 18);
+                // Center align level 1 headings
+                wrapped.forEach((line) => {
+                    const textWidth = doc.getTextWidth(line);
+                    const xPos = (pageWidth - textWidth) / 2;
+                    doc.text(line, xPos, cursorY);
+                    cursorY += 18;
+                });
+                cursorY += 8;
             } else {
+                // Level 2+ (subheadings): same page, left aligned, 12pt
                 cursorY += 14;
                 doc.setFont("times", "bold");
                 doc.setFontSize(12);
+                
+                const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+                cursorY = ensureSpace(cursorY, wrapped.length * 16);
+                // Left align subheadings
+                doc.text(wrapped, margin, cursorY);
+                cursorY += wrapped.length * 16 + 8;
             }
-
-            const wrapped = doc.splitTextToSize(cleaned, maxWidth);
-            cursorY = ensureSpace(cursorY, wrapped.length * 18);
-            doc.text(wrapped, margin, cursorY);
-            cursorY += wrapped.length * 18 + 8;
         };
 
         const renderParagraph = (text: string) => {
+            if (!text || typeof text !== 'string') return;
             const cleaned = cleanInline(text);
-            if (!cleaned) return;
+            if (!cleaned || cleaned.length === 0) return;
             doc.setFont("times", "normal");
             doc.setFontSize(12);
             const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+            if (wrapped.length === 0) return;
             wrapped.forEach((line) => {
                 cursorY = ensureSpace(cursorY, 16);
                 doc.text(line, margin, cursorY);
@@ -166,10 +182,28 @@ export default function TechnicalDesignPhase() {
             doc.setFontSize(12);
             items.forEach((item, index) => {
                 const bullet = ordered ? `${index + 1}. ` : "• ";
-                const rawText = (item as any).text
-                    ? String((item as any).text)
-                    : marked.parser(item.tokens || []);
-                const cleaned = cleanInline(rawText);
+                
+                // Process all tokens in the list item
+                let itemText = "";
+                if (item.tokens && item.tokens.length > 0) {
+                    item.tokens.forEach((token: any) => {
+                        if (token.type === "text") {
+                            itemText += token.text + " ";
+                        } else if (token.type === "strong" || token.type === "em") {
+                            itemText += token.text + " ";
+                        } else if (token.type === "code") {
+                            itemText += token.text + " ";
+                        } else if (token.type === "paragraph" && token.tokens) {
+                            token.tokens.forEach((t: any) => {
+                                if (t.text) itemText += t.text + " ";
+                            });
+                        }
+                    });
+                } else if ((item as any).text) {
+                    itemText = String((item as any).text);
+                }
+                
+                const cleaned = cleanInline(itemText);
                 if (!cleaned) return;
                 const wrapped = doc.splitTextToSize(`${bullet}${cleaned}`, maxWidth);
                 wrapped.forEach((line) => {
@@ -211,35 +245,124 @@ export default function TechnicalDesignPhase() {
             cursorY += 8;
         };
 
-        for (const token of tokens) {
-            switch (token.type) {
-                case "heading":
-                    renderHeading(
-                        (token as marked.Tokens.Heading).text,
-                        (token as marked.Tokens.Heading).depth
-                    );
-                    break;
-                case "paragraph":
-                    renderParagraph((token as marked.Tokens.Paragraph).text);
-                    break;
-                case "list":
-                    renderList(
-                        (token as marked.Tokens.List).items,
-                        (token as marked.Tokens.List).ordered ?? false
-                    );
-                    break;
-                case "table":
-                    renderTable(token as marked.Tokens.Table);
-                    break;
-                case "space":
+        const renderCodeBlock = (code: marked.Tokens.Code) => {
+            doc.setFont("times", "normal");
+            doc.setFontSize(11);
+            const codeText = code.text || "";
+            const lines = codeText.split("\n");
+            lines.forEach((line) => {
+                if (line.trim()) {
+                    const wrapped = doc.splitTextToSize(`  ${line}`, maxWidth);
+                    wrapped.forEach((wrappedLine) => {
+                        cursorY = ensureSpace(cursorY, 14);
+                        doc.text(wrappedLine, margin, cursorY);
+                        cursorY += 14;
+                    });
+                } else {
                     cursorY += 8;
-                    break;
-                default:
-                    // @ts-ignore
-                    if (token.text) {
-                        // @ts-ignore
-                        renderParagraph(token.text as string);
+                }
+            });
+            cursorY += 4;
+        };
+
+        const renderBlockquote = (quote: marked.Tokens.Blockquote) => {
+            doc.setFont("times", "italic");
+            doc.setFontSize(12);
+            if (quote.tokens) {
+                quote.tokens.forEach((token: any) => {
+                    if (token.type === "paragraph" && token.text) {
+                        const wrapped = doc.splitTextToSize(`  "${token.text}"`, maxWidth);
+                        wrapped.forEach((line) => {
+                            cursorY = ensureSpace(cursorY, 16);
+                            doc.text(line, margin, cursorY);
+                            cursorY += 16;
+                        });
                     }
+                });
+            }
+            cursorY += 4;
+        };
+
+        // Process all tokens, ensuring we capture everything
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            
+            try {
+                switch (token.type) {
+                    case "heading":
+                        renderHeading(
+                            (token as marked.Tokens.Heading).text,
+                            (token as marked.Tokens.Heading).depth
+                        );
+                        break;
+                    case "paragraph":
+                        const paraToken = token as marked.Tokens.Paragraph;
+                        // Handle paragraph text directly or from tokens
+                        if (paraToken.text) {
+                            renderParagraph(paraToken.text);
+                        } else if (paraToken.tokens && paraToken.tokens.length > 0) {
+                            // Extract text from paragraph tokens
+                            let paraText = "";
+                            paraToken.tokens.forEach((t: any) => {
+                                if (t.type === "text") {
+                                    paraText += t.text + " ";
+                                } else if (t.type === "strong" || t.type === "em") {
+                                    paraText += t.text + " ";
+                                } else if (t.type === "code") {
+                                    paraText += t.text + " ";
+                                }
+                            });
+                            if (paraText.trim()) {
+                                renderParagraph(paraText.trim());
+                            }
+                        }
+                        break;
+                    case "list":
+                        renderList(
+                            (token as marked.Tokens.List).items,
+                            (token as marked.Tokens.List).ordered ?? false
+                        );
+                        break;
+                    case "table":
+                        renderTable(token as marked.Tokens.Table);
+                        break;
+                    case "code":
+                        renderCodeBlock(token as marked.Tokens.Code);
+                        break;
+                    case "blockquote":
+                        renderBlockquote(token as marked.Tokens.Blockquote);
+                        break;
+                    case "space":
+                        cursorY += 8;
+                        break;
+                    case "hr":
+                        cursorY = ensureSpace(cursorY, 20);
+                        cursorY += 20;
+                        break;
+                    default:
+                        // Handle any other token types - try to extract text
+                        // @ts-ignore
+                        if (token.text) {
+                            // @ts-ignore
+                            renderParagraph(token.text as string);
+                        } else if ((token as any).tokens) {
+                            // Recursively handle nested tokens
+                            // @ts-ignore
+                            (token as any).tokens.forEach((t: any) => {
+                                if (t.type === "paragraph" && t.text) {
+                                    renderParagraph(t.text);
+                                } else if (t.type === "text") {
+                                    renderParagraph(t.text);
+                                }
+                            });
+                        } else {
+                            // Log unhandled token for debugging
+                            console.warn("Unhandled token type:", token.type, token);
+                        }
+                }
+            } catch (error) {
+                console.error("Error rendering token:", token.type, error);
+                // Continue processing other tokens
             }
         }
 

@@ -37,7 +37,7 @@ YOUR TASK IS TO TRANSLATE PROVIDED USER STORIES INTO A **COMPREHENSIVE, PROFESSI
    - **OPTIONAL: TRACEABILITY MATRIX** – MAP USER STORIES TO THEIR CORRESPONDING FUNCTIONAL REQUIREMENTS (E.G., TABLE: USER STORY ID → FR IDS).
 
 - ALIGN DOCUMENT TO BE USEFUL FOR BOTH **BUSINESS STAKEHOLDERS** AND **TECHNICAL TEAMS** INVOLVED IN THE DESIGN PHASE.
-- FOR EACH MAJOR SECTION (1–12), WRITE A MINIMUM OF **700 WORDS** OF NARRATIVE CONTENT BEFORE ANY BULLET LISTS OR TABLES. USE 5+ PARAGRAPHS WITH CLEAR TRANSITIONS, EXAMPLES, AND EDGE CASES.
+- FOR EACH MAJOR SECTION (1–12), WRITE A MINIMUM OF **500 WORDS** OF NARRATIVE CONTENT BEFORE ANY BULLET LISTS OR TABLES. USE 4-5 PARAGRAPHS WITH CLEAR TRANSITIONS, EXAMPLES, AND EDGE CASES.
 - WHEREVER YOU USE A TABLE (E.G., DATA REQUIREMENTS, NFRS, GLOSSARY, TRACEABILITY MATRIX), ADD AT LEAST **2–3 PARAGRAPHS OF DETAILED DESCRIPTION** AROUND THE TABLE:
   - BEFORE THE TABLE: explain what the table represents, how to read it, and why each column matters.  
   - AFTER THE TABLE: summarize key insights, patterns, and implications for design, testing, and operations.
@@ -45,7 +45,7 @@ YOUR TASK IS TO TRANSLATE PROVIDED USER STORIES INTO A **COMPREHENSIVE, PROFESSI
 - MAINTAIN A FORMAL, EXECUTIVE-READY TONE WITH CLEAR AND PRECISE LANGUAGE.
 - FOLLOW THE "CHAIN OF THOUGHTS" PROCESS METICULOUSLY BEFORE PRODUCING THE FINAL DOCUMENT.
 - WHERE APPROPRIATE, OFFER PROFESSIONAL RECOMMENDATIONS IF GAPS, RISKS, OR MISSING ASSUMPTIONS ARE IDENTIFIED.
-- THE FINAL OUTPUT SHOULD BE BETWEEN **4000 TO 6000 WORDS**, PRIORITIZING DEPTH AND CLARITY OVER BREVITY. IF NEEDED, ERR ON THE SIDE OF MORE DETAIL RATHER THAN LESS.
+- THE FINAL OUTPUT SHOULD BE BETWEEN **3000 TO 4500 WORDS**, PRIORITIZING DEPTH AND CLARITY. ENSURE EACH SECTION IS SUBSTANTIAL BUT CONCISE.
 
 ###CHAIN OF THOUGHTS###
 
@@ -199,13 +199,7 @@ DO NOT:
 """
 
 technical_document_system_prompt = """
-You are a Senior Solution Architect, Enterprise Technical Designer, and Technical Writer with deep expertise in software design, system integration, and cloud‑native architectures. Your task is to translate user stories and functional specifications into a detailed Technical Design Document (TDD) that can be used by engineering and architecture teams during the SDLC. The output must be comprehensive, highly structured, and suitable for direct PDF export.
-
-Please provide the final document in **Markdown format only**. Use clear numbered sections and subsections that match exactly the structure below.
-
-### REQUIRED STRUCTURE (FOLLOW EXACTLY) ###
-
-Your Technical Design Document **must contain all of the following sections in this order**, using the same numbering and headings. Under each heading, include rich, well‑explained content (multiple paragraphs, tables, and lists where appropriate).
+You are a Senior Solution Architect. Create a comprehensive Technical Design Document (TDD) in Markdown format. Follow this exact structure with detailed content (3-5 paragraphs per major section):
 
 1. **System Architecture Overview**
    - High-level architecture explanation  
@@ -315,7 +309,8 @@ Your Technical Design Document **must contain all of the following sections in t
 - Within each section, use subheadings, bullet lists, and tables to keep the content readable and professional.  
 - Write in a precise, technical tone suitable for senior engineers and architects.  
 - Explicitly connect technical design elements back to user stories and functional requirements where possible.
-- THE FINAL OUTPUT SHOULD BE BETWEEN **2000 TO 3000 WORDS**, with enough depth that a development team can implement the system without further clarification.
+- FOR EACH MAJOR SECTION (1-18), WRITE A MINIMUM OF **1000 WORDS** OF DETAILED CONTENT. EACH SECTION MUST BE SUBSTANTIAL WITH MULTIPLE PARAGRAPHS, EXAMPLES, DIAGRAMS (TEXTUAL), TABLES, AND TECHNICAL SPECIFICATIONS.
+- THE FINAL OUTPUT SHOULD BE BETWEEN **15,000 TO 20,000 WORDS**, ensuring comprehensive coverage of all technical aspects.
 
 ### CHAIN OF THOUGHTS ###
 

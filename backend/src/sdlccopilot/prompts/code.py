@@ -229,6 +229,196 @@ NODE_BASE_PROMPT = """
 <boltArtifact id="project-import" title="Project Files"><boltAction type="file" filePath="index.js">// run `node index.js` in the terminal\n\nconsole.log(`Hello Node.js v${process.versions.node}!`);\n</boltAction><boltAction type="file" filePath="package.json">{\n  "name": "node-starter",\n  "private": true,\n  "scripts": {\n    "test": "echo \\"Error: no test specified\\" && exit 1"\n  }\n}\n</boltAction></boltArtifact>
 """;
 
-FRONTEND_PROMPT = f"Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${REACT_BASE_PROMPT}\n\n Here is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n" 
+FRONTEND_PROMPT = f"""
+Here is an artifact that contains all files of the project visible to you.
+Consider the contents of ALL files in the project.
 
-BACKEND_PROMPT = f"Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${NODE_BASE_PROMPT}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`,"
+{REACT_BASE_PROMPT}
+
+CRITICAL REQUIREMENTS FOR FRONTEND CODE GENERATION:
+
+1. **PROFESSIONAL UI/UX DESIGN:**
+   - Create a modern, polished, production-ready user interface
+   - Use professional color schemes, typography, and spacing
+   - Implement smooth animations and transitions using CSS/Tailwind
+   - Ensure responsive design that works perfectly on mobile, tablet, and desktop
+   - Use proper visual hierarchy with clear headings, sections, and content organization
+   - Implement loading states, error states, and empty states for all components
+   - Add hover effects, focus states, and interactive feedback
+   - Use professional icons from lucide-react throughout
+
+2. **COMPONENT ARCHITECTURE:**
+   - Break down UI into reusable, well-structured components
+   - Use TypeScript for type safety
+   - Implement proper prop types and interfaces
+   - Create custom hooks for reusable logic (e.g., useAuth, useApi, useLocalStorage)
+   - Separate concerns: components, hooks, utils, types, constants
+   - Use proper folder structure: components/, hooks/, utils/, types/, services/
+
+3. **STATE MANAGEMENT:**
+   - Use React Context API or Zustand for global state
+   - Implement proper state management patterns
+   - Handle async operations with proper loading/error states
+   - Use React Query or SWR for server state management if needed
+
+4. **FORM HANDLING & VALIDATION:**
+   - Implement comprehensive form validation
+   - Use libraries like react-hook-form with zod for validation
+   - Show clear error messages and validation feedback
+   - Implement proper form submission handling
+
+5. **ROUTING & NAVIGATION:**
+   - Use React Router for navigation
+   - Implement protected routes if authentication is required
+   - Add proper loading states during route transitions
+   - Implement breadcrumbs or navigation indicators
+
+6. **API INTEGRATION:**
+   - Create a centralized API service layer
+   - Use axios or fetch with proper error handling
+   - Implement request/response interceptors
+   - Handle authentication tokens properly
+   - Add retry logic for failed requests
+
+7. **STYLING BEST PRACTICES:**
+   - Use Tailwind CSS for styling (already configured)
+   - Create reusable utility classes
+   - Implement dark mode if applicable
+   - Ensure consistent spacing, colors, and typography
+   - Use CSS variables for theme customization
+
+8. **PERFORMANCE OPTIMIZATION:**
+   - Implement code splitting and lazy loading
+   - Use React.memo for expensive components
+   - Optimize images and assets
+   - Implement virtual scrolling for long lists
+   - Use debouncing/throttling for search and filters
+
+9. **ACCESSIBILITY:**
+   - Add proper ARIA labels
+   - Ensure keyboard navigation works
+   - Maintain proper color contrast
+   - Add focus indicators
+   - Use semantic HTML elements
+
+10. **ERROR HANDLING:**
+    - Implement global error boundaries
+    - Show user-friendly error messages
+    - Log errors appropriately
+    - Provide fallback UI for errors
+
+11. **CODE QUALITY:**
+    - Write clean, well-commented code
+    - Follow React best practices and patterns
+    - Use meaningful variable and function names
+    - Implement proper TypeScript types
+    - Add JSDoc comments for complex functions
+
+GENERATE COMPLETE, PRODUCTION-READY CODE WITH ALL NECESSARY FILES, COMPONENTS, HOOKS, UTILITIES, AND CONFIGURATIONS. DO NOT SKIP ANY ESSENTIAL PARTS.
+
+Here is a list of files that exist on the file system but are not being shown to you:
+  - .gitignore
+  - package-lock.json
+""" 
+
+BACKEND_PROMPT = f"""
+Here is an artifact that contains all files of the project visible to you.
+Consider the contents of ALL files in the project.
+
+{NODE_BASE_PROMPT}
+
+CRITICAL REQUIREMENTS FOR BACKEND CODE GENERATION:
+
+1. **ARCHITECTURE & STRUCTURE:**
+   - Use Express.js or FastAPI (Python) or NestJS (Node.js) for robust backend framework
+   - Implement proper MVC or layered architecture (Controller → Service → Repository/Data Access)
+   - Separate routes, controllers, services, models, and middleware
+   - Use proper folder structure: routes/, controllers/, services/, models/, middleware/, utils/, config/
+   - Implement dependency injection where applicable
+   - Use environment variables for configuration
+
+2. **API DESIGN:**
+   - Follow RESTful API conventions
+   - Use proper HTTP methods (GET, POST, PUT, PATCH, DELETE)
+   - Implement proper status codes (200, 201, 400, 401, 403, 404, 500)
+   - Create comprehensive API documentation (OpenAPI/Swagger)
+   - Version your APIs (e.g., /api/v1/)
+   - Use proper request/response schemas with validation
+
+3. **DATABASE & DATA LAYER:**
+   - Use proper ORM (Prisma, TypeORM, Sequelize for Node.js; SQLAlchemy for Python)
+   - Implement database migrations
+   - Use connection pooling
+   - Implement proper transaction handling
+   - Add database indexes for performance
+   - Use proper data models with relationships
+
+4. **AUTHENTICATION & AUTHORIZATION:**
+   - Implement JWT-based authentication
+   - Use bcrypt for password hashing
+   - Implement role-based access control (RBAC)
+   - Add middleware for authentication and authorization
+   - Implement refresh token mechanism
+   - Add rate limiting for authentication endpoints
+
+5. **SECURITY BEST PRACTICES:**
+   - Validate and sanitize all inputs
+   - Use parameterized queries to prevent SQL injection
+   - Implement CORS properly
+   - Use helmet.js for security headers
+   - Implement CSRF protection
+   - Sanitize user inputs
+   - Implement proper error handling (don't expose sensitive info)
+
+6. **ERROR HANDLING:**
+   - Create custom error classes
+   - Implement global error handler middleware
+   - Return consistent error response format
+   - Log errors appropriately
+   - Handle async errors properly
+
+7. **VALIDATION:**
+   - Use validation libraries (Joi, Zod, class-validator)
+   - Validate all request bodies, query params, and route params
+   - Return clear validation error messages
+   - Implement custom validators for business logic
+
+8. **LOGGING & MONITORING:**
+   - Implement structured logging (Winston, Pino)
+   - Log all important events (requests, errors, business logic)
+   - Use different log levels (info, warn, error, debug)
+   - Implement request ID tracking
+
+9. **TESTING:**
+   - Write unit tests for services and utilities
+   - Write integration tests for API endpoints
+   - Use testing frameworks (Jest, Mocha, pytest)
+   - Aim for good test coverage
+
+10. **PERFORMANCE:**
+    - Implement caching (Redis) where appropriate
+    - Use database query optimization
+    - Implement pagination for list endpoints
+    - Use compression middleware
+    - Optimize database queries (avoid N+1 problems)
+
+11. **CODE QUALITY:**
+    - Write clean, well-documented code
+    - Use TypeScript for Node.js or type hints for Python
+    - Follow SOLID principles
+    - Implement proper dependency management
+    - Use ESLint/Prettier for code formatting
+
+12. **DEPLOYMENT READINESS:**
+    - Create Dockerfile and docker-compose.yml
+    - Add health check endpoints
+    - Implement graceful shutdown
+    - Use environment-based configuration
+    - Add API documentation
+
+GENERATE COMPLETE, PRODUCTION-READY BACKEND CODE WITH ALL NECESSARY FILES, MODULES, MIDDLEWARE, SERVICES, AND CONFIGURATIONS. ENSURE THE CODE IS SECURE, SCALABLE, AND FOLLOWS INDUSTRY BEST PRACTICES.
+
+Here is a list of files that exist on the file system but are not being shown to you:
+  - .gitignore
+  - package-lock.json
+"""

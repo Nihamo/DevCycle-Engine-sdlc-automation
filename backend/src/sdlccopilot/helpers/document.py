@@ -11,7 +11,11 @@ class DocumentHelper:
     def generate_functional_document_from_llm(self, user_stories):
         try:
             logging.info("Generating functional document with LLM...")
-            user_query =  f"Create a functional documents for the user stories: {user_stories}."
+            # Truncate user_stories if too long to avoid token limits
+            user_stories_str = str(user_stories)
+            if len(user_stories_str) > 2000:
+                user_stories_str = user_stories_str[:2000] + "... (truncated for token limits)"
+            user_query = f"Create a functional document for these user stories: {user_stories_str}."
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : functional_document_system_prompt, "human_query" : user_query})
             logging.info("Functional document generated with LLM.")
@@ -37,7 +41,29 @@ class DocumentHelper:
     def generate_technical_document_from_llm(self, functional_document, user_stories):
         try:
             logging.info("Generating technical document with LLM...")
-            user_query =  f"Create technical documents for the user stories: {user_stories} and the functional document: {functional_document}"
+            # Summarize functional document to reduce token usage (keep only key sections)
+            # Extract key sections: functional requirements, data requirements, NFRs
+            import re
+            func_summary = ""
+            if functional_document:
+                # Extract main sections (1-12) headings and first paragraph of each
+                sections = re.findall(r'\*\*(\d+\.\s+[^*]+)\*\*', functional_document)
+                func_summary = f"Functional document covers: {', '.join(sections[:5])}. "
+                # Extract functional requirements section if present
+                fr_match = re.search(r'\*\*4\.\s+SPECIFIC FUNCTIONAL REQUIREMENTS\*\*([^*]+)', functional_document, re.DOTALL)
+                if fr_match:
+                    fr_text = fr_match.group(1)[:500]  # First 500 chars
+                    func_summary += f"Key functional requirements: {fr_text}..."
+            
+            # Truncate user_stories if too long
+            user_stories_str = str(user_stories)
+            if len(user_stories_str) > 1500:
+                user_stories_str = user_stories_str[:1500] + "... (truncated)"
+            
+            user_query = f"Create a comprehensive Technical Design Document based on these user stories: {user_stories_str}. "
+            if func_summary:
+                user_query += f"Reference this functional document summary: {func_summary}"
+            
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : technical_document_system_prompt, "human_query" : user_query})
             logging.info("Technical document generated with LLM.")

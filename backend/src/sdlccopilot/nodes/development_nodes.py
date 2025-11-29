@@ -15,7 +15,13 @@ class DevelopmentNodes:
         logging.info("In generate_frontend_code...")
         frontend_code = None
         if os.environ.get("PROJECT_ENVIRONMENT") != "development":
-            frontend_code = self.code_helper.generate_frontend_code_from_llm(state.user_stories)
+            functional_doc = getattr(state, 'functional_documents', None) or ''
+            technical_doc = getattr(state, 'technical_documents', None) or ''
+            frontend_code = self.code_helper.generate_frontend_code_from_llm(
+                state.user_stories,
+                functional_document=functional_doc,
+                technical_document=technical_doc
+            )
         else:
             time.sleep(10)
             frontend_code = CONSTANT_FRONTEND_CODE
@@ -80,7 +86,13 @@ class DevelopmentNodes:
         logging.info("In generate_backend_code...")
         backend_code = None
         if os.environ.get("PROJECT_ENVIRONMENT") != "development":
-            backend_code = self.code_helper.generate_backend_code_from_llm(state.user_stories)
+            functional_doc = getattr(state, 'functional_documents', None) or ''
+            technical_doc = getattr(state, 'technical_documents', None) or ''
+            backend_code = self.code_helper.generate_backend_code_from_llm(
+                state.user_stories,
+                functional_document=functional_doc,
+                technical_document=technical_doc
+            )
         else:
             time.sleep(10)
             backend_code = CONSTANT_BACKEND_CODE

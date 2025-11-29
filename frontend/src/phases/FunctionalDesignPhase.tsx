@@ -129,32 +129,41 @@ export default function FunctionalDesignPhase() {
       const cleaned = cleanInline(text);
       if (!cleaned) return;
 
-      // Page break rules:
-      // - Level 1 or 2 (major section) start on a new page (except the first one after title)
-      if (level <= 2) {
+      if (level === 1) {
+        // Level 1 (main sections): new page, center aligned, 14pt
         if (startedMajorSection) {
-          // New major section → new page
           doc.addPage();
           cursorY = margin;
         } else {
-          // First major section on the first page, continue after title
           startedMajorSection = true;
           cursorY = ensureSpace(cursorY, 14);
         }
-        cursorY += 14; // spacing before
+        cursorY += 14;
         doc.setFont("times", "bold");
-        doc.setFontSize(14); // subheading
+        doc.setFontSize(14);
+        
+        const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+        cursorY = ensureSpace(cursorY, wrapped.length * 18);
+        // Center align level 1 headings
+        wrapped.forEach((line) => {
+          const textWidth = doc.getTextWidth(line);
+          const xPos = (pageWidth - textWidth) / 2;
+          doc.text(line, xPos, cursorY);
+          cursorY += 18;
+        });
+        cursorY += 8;
       } else {
-        // Sub‑sub‑heading: keep on same page, ensure space
+        // Level 2+ (subheadings): same page, left aligned, 12pt
         cursorY += 14;
         doc.setFont("times", "bold");
         doc.setFontSize(12);
+        
+        const wrapped = doc.splitTextToSize(cleaned, maxWidth);
+        cursorY = ensureSpace(cursorY, wrapped.length * 16);
+        // Left align subheadings
+        doc.text(wrapped, margin, cursorY);
+        cursorY += wrapped.length * 16 + 8;
       }
-
-      const wrapped = doc.splitTextToSize(cleaned, maxWidth);
-      cursorY = ensureSpace(cursorY, wrapped.length * 18);
-      doc.text(wrapped, margin, cursorY);
-      cursorY += wrapped.length * 18 + 8; // spacing after
     };
 
     const renderParagraph = (text: string) => {

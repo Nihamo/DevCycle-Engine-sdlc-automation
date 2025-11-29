@@ -8,10 +8,26 @@ class CodeHelper:
     def __init__(self, llm):
         self.llm = llm
     
-    def generate_frontend_code_from_llm(self, user_stories):
+    def generate_frontend_code_from_llm(self, user_stories, functional_document=None, technical_document=None):
         try:
             logging.info("Generating frontend code with LLM...")
-            user_query =  f"Analyze these user stories {user_stories} and generate a frontend react + vite code. {FRONTEND_PROMPT}."
+            
+            # Build comprehensive context
+            context_parts = [f"User Stories: {user_stories}"]
+            
+            if functional_document:
+                # Include key sections from functional document
+                func_summary = functional_document[:2000] if len(functional_document) > 2000 else functional_document
+                context_parts.append(f"Functional Requirements: {func_summary}")
+            
+            if technical_document:
+                # Include frontend-relevant sections from technical document
+                tech_summary = technical_document[:2000] if len(technical_document) > 2000 else technical_document
+                context_parts.append(f"Technical Design (Frontend): {tech_summary}")
+            
+            context = "\n\n".join(context_parts)
+            user_query = f"Analyze the following project requirements and generate a professional, production-ready frontend React + Vite + TypeScript application:\n\n{context}\n\n{FRONTEND_PROMPT}"
+            
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : CODE_SYSTEM_PROMPT, "human_query" : user_query})
             logging.info("Frontend code generated with LLM.")
@@ -34,10 +50,26 @@ class CodeHelper:
             logging.error(f"Error revising frontend code: {str(e)}")
             raise CustomException(e, sys)
     
-    def generate_backend_code_from_llm(self, user_stories):
+    def generate_backend_code_from_llm(self, user_stories, functional_document=None, technical_document=None):
         try:
             logging.info("Generating backend code with LLM...")
-            user_query =  f"Analyze these user stories {user_stories} and generate a nodejs backend code. {BACKEND_PROMPT}."
+            
+            # Build comprehensive context
+            context_parts = [f"User Stories: {user_stories}"]
+            
+            if functional_document:
+                # Include key sections from functional document
+                func_summary = functional_document[:2000] if len(functional_document) > 2000 else functional_document
+                context_parts.append(f"Functional Requirements: {func_summary}")
+            
+            if technical_document:
+                # Include backend-relevant sections from technical document
+                tech_summary = technical_document[:3000] if len(technical_document) > 3000 else technical_document
+                context_parts.append(f"Technical Design (Backend): {tech_summary}")
+            
+            context = "\n\n".join(context_parts)
+            user_query = f"Analyze the following project requirements and generate a professional, production-ready backend application (Node.js/Express or Python/FastAPI):\n\n{context}\n\n{BACKEND_PROMPT}"
+            
             chain = prompt_template | self.llm 
             response = chain.invoke({"system_prompt" : CODE_SYSTEM_PROMPT, "human_query" : user_query})
             logging.info("Backend code generated with LLM.")
