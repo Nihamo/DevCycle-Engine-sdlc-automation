@@ -2,7 +2,7 @@
 
 # 🚀 DevCycle Engine — Agentic SDLC Automation Platform
 
-DevCycle Engine is an **Agentic AI–powered SDLC Orchestrator** that automates the entire software development lifecycle — from requirements → user stories → design docs → frontend/backend code → test cases → QA → deployment steps.
+DevCycle Engine is an **Agentic AI–powered SDLC Orchestrator** that automates the entire software development lifecycle — from requirements → user stories → design docs → frontend/backend code → test cases 
 
 Built using:
 - FastAPI (Backend)
